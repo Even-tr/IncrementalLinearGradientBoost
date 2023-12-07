@@ -3,7 +3,7 @@ such that the final model is itself a linear model
 
 ## API
 
-I try to follow the sklearn API format as this will make integration in preexisting pipelines as easy as possible. It is however not done, and supports only the bare essentials of it to test the algoirhtm.
+I try to follow the sklearn API format as this will make integration in preexisting pipelines as easy as possible. It is however not done, and supports only the bare essentials of it to test the algorithm.
 
 ## Structure
 
