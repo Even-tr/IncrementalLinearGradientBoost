@@ -66,30 +66,6 @@ class Logistic:
         z = X@self.coef_ + self.intercept
         return sigmoid(z)
     
-    def predict_prob(self, X):
-        """
-        Predicts the probability of being a label.
-
-        Must be fitted prior.
-        """
-
-        if not self.is_fitted:
-            raise RuntimeError('Model must be fitted before performing prediction')
-        return self._predict_prob(X)
-    
-    def _predict(self, X, threshold=0.5):
-        return (self._predict_prob(X) > threshold).astype(int)
-    
-    def predict(self, X, threshold=0.5):
-        """
-        Predicts the class if the probability is over the threshold. 
-
-        Must be fitted prior.
-        """
-        if not self.is_fitted:
-            raise RuntimeError('Model must be fitted before performing prediction')
-        return self._predict(X, threshold=threshold)
-    
 
     def fit(self, X, y):
         self.coef_ = np.zeros_like(X[0])
@@ -108,7 +84,7 @@ class Logistic:
                 print(f'step: {i}')
 
             best_coef = 0
-            best_coef_col = 0
+            best_coef_col = -1
             best_coef_dev = 10**10
 
             for j in range(n_columns):
@@ -122,6 +98,14 @@ class Logistic:
                     best_coef_col = j
                     best_coef_dev = dev
 
+            
+            if best_coef_col == -1:
+                print(f'No feature found, stopping early at {i+1} steps')
+                self.actual_steps = i+1
+                break
+            
+            if self.verbose:
+                print(f'selected feature {best_coef_col} with value {best_coef} and deviance {best_coef_dev}')
             best_coef_scaled = best_coef*self.gamma
             self.coef_[best_coef_col] += best_coef_scaled
             working_y = y - self._predict_prob(X)
@@ -135,6 +119,31 @@ class Logistic:
 # ============================================================
 # Helper methods, not neccesary for fitting
 
+    def predict_prob(self, X):
+        """
+        Predicts the probability of being a label.
+
+        Must be fitted prior.
+        """
+
+        if not self.is_fitted:
+            raise RuntimeError('Model must be fitted before performing prediction')
+        return self._predict_prob(X)
+
+    def _predict(self, X, threshold=0.5):
+        return (self._predict_prob(X) > threshold).astype(int)
+    
+    
+    def predict(self, X, threshold=0.5):
+        """
+        Predicts the class if the probability is over the threshold. 
+
+        Must be fitted prior.
+        """
+        if not self.is_fitted:
+            raise RuntimeError('Model must be fitted before performing prediction')
+        return self._predict(X, threshold=threshold)
+    
 
     def score(self, X, y):
         """
@@ -149,7 +158,7 @@ class Logistic:
 
         coef_ = np.zeros_like(self.coef_)
         loss = []
-        
+
         if scale:
             norm = X.shape[0]
         else:
@@ -157,8 +166,8 @@ class Logistic:
 
         for i in range(self.n_steps):
             z = X@coef_ + self.intercept
-            loss.append(deviance(y, sigmoid(z))/norm)
-            coef += self.trace[i]
+            loss.append(deviance(y, sigmoid(z)).sum()/norm)
+            coef_ += self.trace[i]
 
         return loss
     
