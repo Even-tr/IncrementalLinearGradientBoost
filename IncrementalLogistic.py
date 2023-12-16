@@ -142,16 +142,22 @@ class Logistic:
         """
         return (self.predict(X) == y).mean()
 
-    def trace_loss(self, X, y):
+    def trace_loss(self, X, y, scale=True):
         """
         Calculates the mean loss on a new data set X with labels y for every step
         """
 
-        coef = np.zeros_like(self.coef_)
+        coef_ = np.zeros_like(self.coef_)
         loss = []
-        n = X.shape[0]
+        
+        if scale:
+            norm = X.shape[0]
+        else:
+            norm = 1
+
         for i in range(self.n_steps):
-            loss.append(self.loss(X@coef, y)/n)
+            z = X@coef_ + self.intercept
+            loss.append(deviance(y, sigmoid(z))/norm)
             coef += self.trace[i]
 
         return loss
